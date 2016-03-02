@@ -1,10 +1,17 @@
-﻿Build started 01/03/2016 05:04:55 p.m..
+﻿Build started 01/03/2016 08:20:28 p.m..
      1>Project "C:\Users\Jesus Imery\Desktop\concordia courses\COMP 371\HW2 2\VS2013\HW_Template.vcxproj" on node 2 (Build target(s)).
      1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(364,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I../ThirdParty/glew /I../ThirdParty/glm /I../ThirdParty/glfw /I../ThirdParty/cimg /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"C:\Users\Jesus Imery\Desktop\concordia courses\COMP 371\HW2 2\VS2013\/../Build/Debug/" /Fd"C:\Users\Jesus Imery\Desktop\concordia courses\COMP 371\HW2 2\VS2013\/../Build/Debug/vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\Source\main.cpp
          main.cpp
-     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(65): warning C4065: switch statement contains 'default' but no 'case' labels
+     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(113): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(117): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(123): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(127): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(148): warning C4101: 'aspect' : unreferenced local variable
+     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(480): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(481): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\jesus imery\desktop\concordia courses\comp 371\hw2 2\source\main.cpp(482): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Jesus Imery\Desktop\concordia courses\COMP 371\HW2 2\VS2013\/../Bin/.\HW_Template-Debug.exe" /INCREMENTAL /NOLOGO /LIBPATH:../ThirdParty/glew /LIBPATH:../ThirdParty/glfw/ opengl32.lib glew32s.lib glew32.lib glfw3.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Jesus Imery\Desktop\concordia courses\COMP 371\HW2 2\VS2013\/../Bin/.\HW_Template-Debug.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Jesus Imery\Desktop\concordia courses\COMP 371\HW2 2\VS2013\/../Bin/.\HW_Template-Debug.lib" /MACHINE:X86 "C:\Users\Jesus Imery\Desktop\concordia courses\COMP 371\HW2 2\VS2013\/../Build/Debug/main.obj"
          HW_Template.vcxproj -> C:\Users\Jesus Imery\Desktop\concordia courses\COMP 371\HW2 2\VS2013\/../Bin/.\HW_Template-Debug.exe
@@ -12,4 +19,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.23
+Time Elapsed 00:00:01.31

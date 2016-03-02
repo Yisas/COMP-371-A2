@@ -24,6 +24,8 @@ using namespace std;
 #define M_PI        3.14159265358979323846264338327950288   /* pi */
 #define DEG_TO_RAD	M_PI/180.0f
 
+enum RenderType { POINTS, LINES, LINE_STRIP };
+
 GLFWwindow* window = 0x00;
 
 // Window dimensions
@@ -46,26 +48,116 @@ GLuint VBO, VAO, EBO;
 
 GLfloat point_size = 3.0f;
 
-GLfloat vertices[] = {
-	0.5f, 0.5f, 0.0f,  // Top Right
-	0.5f, -0.5f, 0.0f,  // Bottom Right
-	-0.5f, -0.5f, 0.0f,  // Bottom Left
-	-0.5f, 0.5f, 0.0f   // Top Left 
-};
-GLuint indices[] = {  // Note that we start from 0!
-	0, 1, 3,  // First Triangle
-	1, 2, 3   // Second Triangle
+vector<GLfloat> vertices;
+vector<GLuint> indices;
+
+// Begin globals.
+static int numVal = 0; // Current selection index.
+static float lengthArrowLine = 2.0; // Length of arrow line.
+static int numVertices = 50; // Number of vertices on cubic.
+
+int numberOfControlPoints;
+std::vector<float*> controlPointsTest = std::vector<float*>();
+std::vector<float*> tangentVectorsTest = std::vector<float*>();
+
+// Control points.
+static float controlPoints[2][3] =
+{
+	{ -0.5, 0.5, 0.0 }, { 0.5, 0.5, 0.0 }
 };
 
+// Tangent vectors at control points.
+static float tangentVectors[2][3] =
+{
+	{ 0.0, 10.0, 0.0 }, { 10.0, 0.0, 0.0 }
+};
+
+// Lengths of tangent vectors.
+static float squareLengthTangent[2];
+
+// End points of tangent vectors.
+static float endPointTangentVectors[2][3];
+
+// End points of arrow lines.
+static float endPointArrowLines[4][3];;
+// End globals.
+
+void indicesInitialize(){
+	for (int i = 0; i < 5; i++)
+		indices.push_back(i);
+}
+
+
+// Routine to compute tangent vector endpoints by adding tangent vector to control point vector.
+void computeEndPointTangentVectors(void)
+{
+	for (int i = 0; i < 2; i++)
+		for (int j = 0; j < 3; j++)
+			endPointTangentVectors[i][j] = controlPoints[i][j] + tangentVectors[i][j];
+}
+
+// Routine to compute arrow line endpoints.
+void computeEndPointArrowLines(void)
+{
+	for (int i = 0; i < 2; i++)
+	{
+		squareLengthTangent[i] = tangentVectors[i][0] * tangentVectors[i][0] +
+			tangentVectors[i][1] * tangentVectors[i][1];
+
+		if (squareLengthTangent[i] != 0.0)
+		{
+
+			endPointArrowLines[2 * i][0] = endPointTangentVectors[i][0] -
+				lengthArrowLine *
+				(tangentVectors[i][0] - tangentVectors[i][1]) /
+				sqrt(2.0 * squareLengthTangent[i]);
+			endPointArrowLines[2 * i][1] = endPointTangentVectors[i][1] -
+				lengthArrowLine *
+				(tangentVectors[i][0] + tangentVectors[i][1]) /
+				sqrt(2.0 * squareLengthTangent[i]);
+			endPointArrowLines[2 * i][2] = 0.0;
+
+			endPointArrowLines[2 * i + 1][0] = endPointTangentVectors[i][0] -
+				lengthArrowLine *
+				(tangentVectors[i][0] + tangentVectors[i][1]) /
+				sqrt(2.0 * squareLengthTangent[i]);
+			endPointArrowLines[2 * i + 1][1] = endPointTangentVectors[i][1] -
+				lengthArrowLine *
+				(-tangentVectors[i][0] + tangentVectors[i][1]) /
+				sqrt(2.0 * squareLengthTangent[i]);
+			endPointArrowLines[2 * i + 1][2] = 0.0;
+		}
+	}
+}
 
 ///Handle the keyboard input
 void keyPressed(GLFWwindow *_window, int key, int scancode, int action, int mods) {
+
+	float diam = 100.0f;
+	float zNear = 1.0;
+	float zFar = zNear + diam;
+
+	float cx = 0.0f;
+	float cy = 0.0f;
+	float cz = 0.0f;
+
+	GLdouble left = cx - diam;
+	GLdouble right = cx + diam;
+	GLdouble bottom = cy - diam;
+	GLdouble top = cy + diam;
+	GLdouble aspect;
+
 	switch (key) {
+	case GLFW_KEY_UP:
+		view_matrix = glm::rotate(view_matrix, 0.1f, glm::vec3(1.0, 0.0, 0.0));
+		break;
+	case GLFW_KEY_DOWN:
+		glm::lookAt(glm::vec3(0.5, 0.5, 0.0), glm::vec3(200.0, 0.0, 0.0),glm::vec3(0.0,1.0,0.0));
+		break;
 	default: break;
 	}
 	return;
 }
-
 
 bool initialize() {
 	/// Initialize GL context and O/S window using the GLFW helper library
@@ -74,9 +166,8 @@ bool initialize() {
 		return false;
 	}
 
-	/// Create a window of size 640x480 and with title "Lecture 2: First Triangle"
 	glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
-	window = glfwCreateWindow(WIDTH, HEIGHT, "COMP371: Assignment 1", NULL, NULL);
+	window = glfwCreateWindow(WIDTH, HEIGHT, "COMP371: Assignment 2", NULL, NULL);
 	if (!window) {
 		fprintf(stderr, "ERROR: could not open window with GLFW3\n");
 		glfwTerminate();
@@ -217,13 +308,9 @@ GLuint loadShaders(std::string vertex_shader_path, std::string fragment_shader_p
 	return ProgramID;
 }
 
-
-int main() {
-
-	initialize();
-
-	///Load the shaders
-	shader_program = loadShaders("../Source/COMP371_hw1.vs", "../Source/COMP371_hw1.fss");
+void glBufferStart(){
+	
+	indicesInitialize();
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -232,17 +319,87 @@ int main() {
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(vertices[0]), &vertices[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), &indices[0], GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0); 
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glBindVertexArray(0); 
+	glBindVertexArray(0);
+}
+
+void commonDrawArrays(RenderType type){
+
+	glBufferStart();
+
+	glBindVertexArray(VAO);
+
+	switch (type)
+	{
+	case POINTS:
+		glDrawArrays(GL_POINTS, 0, vertices.size() / 3);
+		break;
+	case LINES:
+		glDrawArrays(GL_LINES, 0, vertices.size() / 3);
+		break;
+	case LINE_STRIP:
+		glDrawArrays(GL_LINE_STRIP, 0, vertices.size() / 3);
+		break;
+	default:
+		break;
+	}
+
+	glBindVertexArray(0);
+}
+
+void startUserInput(){
+
+	cout << "Enter the number of control points to be used:\n";
+	cin >> numberOfControlPoints;
+	
+	for (int i = 0; i < numberOfControlPoints; i++)
+	{
+		float* tempArray= new float[3];
+
+		cout << "Enter X value for control point " << i << " as a float:\n";
+		cin >> tempArray[0];
+
+		cout << "Enter Y value for control point " << i << " as a float:\n";
+		cin >> tempArray[1];
+
+		cout << "Enter Z value for control point " << i << " as a float:\n";
+		cin >> tempArray[2];
+
+		controlPointsTest.push_back(tempArray);
+
+		float* tempArray2 = new float[3];
+
+		cout << "Enter a value for tangent vector of point " << i << " as a float:\n";
+		cin >> tempArray2[0];
+
+		cout << "Enter b value for tangent vector of point " << i << " as a float:\n";
+		cin >> tempArray2[1];
+
+		cout << "Enter c value for tangent vector of point " << i << " as a float:\n";
+		cin >> tempArray2[2];
+
+		tangentVectorsTest.push_back(tempArray2);
+	}
+		
+}
+
+int main() {
+
+	startUserInput();
+
+	initialize();
+
+	///Load the shaders
+	shader_program = loadShaders("../Source/COMP371_hw1.vs", "../Source/COMP371_hw1.fss");
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -264,11 +421,75 @@ int main() {
 		glUniformMatrix4fv(view_matrix_id, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(model_matrix_id, 1, GL_FALSE, glm::value_ptr(model_matrix));
 
-		glBindVertexArray(VAO);
-		//glDrawArrays(GL_TRIANGLES, 0, 6);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
+		int i, j;
+		float u, H0, H1, H2, H3;
 
+		computeEndPointTangentVectors(); // Compute tangent vector endpoints.
+		computeEndPointArrowLines(); // Compute arrow endpoints.
+
+		vertices.clear();
+
+		for (i = 0; i < 2; i++)
+			for (j = 0; j < 3; j++)
+				vertices.push_back(controlPoints[i][j]);
+				
+		commonDrawArrays(RenderType::POINTS);
+
+		vertices.clear();
+
+		// Draw the tangent vectors as arrows.
+		for (i = 0; i < 2; i++)
+		{
+			if (squareLengthTangent[i] != 0.0)
+			{
+				for (j = 0; j < 3; j++)
+					vertices.push_back(controlPoints[i][j]);
+
+
+				for (j = 0; j < 3; j++)
+					vertices.push_back(endPointTangentVectors[i][j]);
+
+				for (j = 0; j < 3; j++)
+					vertices.push_back(endPointTangentVectors[i][j]);
+
+				for (j = 0; j < 3; j++)
+					vertices.push_back(endPointArrowLines[2 * i][j]);
+
+				for (j = 0; j < 3; j++)
+					vertices.push_back(endPointTangentVectors[i][j]);
+				
+				for (j = 0; j < 3; j++)
+					vertices.push_back(endPointArrowLines[2 * i][j]);
+
+			}
+			else
+			{
+				for (j = 0; j < 3; j++)
+					vertices.push_back(controlPoints[i][j]);
+			}
+		}
+
+		commonDrawArrays(RenderType::LINES);
+
+		vertices.clear();
+
+		// Draw the cubic curve as a line strip.
+		for (i = 0; i <= numVertices; ++i)
+		{
+			u = (float)i / numVertices;
+			H0 = 2.0*u*u*u - 3 * u*u + 1.0;
+			H1 = -2.0*u*u*u + 3 * u*u;
+			H2 = u*u*u - 2.0*u*u + u;
+			H3 = u*u*u - u*u;
+			vertices.push_back(H0*controlPoints[0][0] + H1*controlPoints[1][0] +
+				H2*tangentVectors[0][0] + H3*tangentVectors[1][0]);
+			vertices.push_back(H0*controlPoints[0][1] + H1*controlPoints[1][1] +
+				H2*tangentVectors[0][1] + H3*tangentVectors[1][1]);
+			vertices.push_back(0.0);
+		}
+
+		commonDrawArrays(RenderType::LINE_STRIP);
+		
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
 	}
@@ -276,3 +497,5 @@ int main() {
 	cleanUp();
 	return 0;
 }
+
+
